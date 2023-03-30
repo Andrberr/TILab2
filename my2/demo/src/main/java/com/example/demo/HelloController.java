@@ -5,7 +5,6 @@ import java.io.*;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyEvent;
@@ -13,6 +12,10 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 public class HelloController {
+
+    @FXML
+    private Button readFromFileButton;
+
     @FXML
     private Button encryptionButton;
 
@@ -36,13 +39,15 @@ public class HelloController {
 
     String initialState = "";
 
-    boolean isCiphering = true;
+    boolean isCiphering;
 
     int n = 38;
 
-    String getFile() {
+    @FXML
+    void onReadFromFileButtonClick(ActionEvent event) {
         keyArea.clear();
         encryptedTextArea.clear();
+        isCiphering = true;
 
         String path = "";
         FileChooser fileChooser = new FileChooser();
@@ -53,13 +58,27 @@ public class HelloController {
         } catch (Exception e) {
             System.err.println("Select file!");
             plainTextArea.clear();
-            return path;
         }
 
-        return path;
+        readFromFile(path);
     }
 
-    String divideBy8() {
+    void readFromFile(String path) {
+        if (path.length() != 0) {
+            byteArray = new byte[(int) fileObject.length()];
+            try {
+                FileInputStream input = new FileInputStream(path);
+                input.read(byteArray, 0, byteArray.length);
+                plainTextArea.setText(divideTextByBytes());
+                initialStateField.setDisable(false);
+                input.close();
+            } catch (Exception e) {
+                System.err.println("Some error with file!");
+            }
+        }
+    }
+
+    String divideTextByBytes() {
         StringBuilder plaintext = new StringBuilder();
 
         for (byte b : byteArray) {
@@ -71,27 +90,6 @@ public class HelloController {
         return plaintext.toString();
     }
 
-
-    void readFile(String fileName) {
-        if (fileName.length() != 0) {
-            byteArray = new byte[(int) fileObject.length()];
-            try {
-                FileInputStream input = new FileInputStream(fileName);
-                input.read(byteArray, 0, byteArray.length);
-                plainTextArea.setText(divideBy8());
-                initialStateField.setDisable(false);
-                input.close();
-            } catch (Exception e) {
-                System.err.println("Some error with file!");
-            }
-        }
-    }
-
-    @FXML
-    void onReadButtonClick(ActionEvent event) {
-        String fileName = getFile();
-        readFile(fileName);
-    }
 
     @FXML
     void onKeyTyped(KeyEvent event) {
@@ -113,7 +111,22 @@ public class HelloController {
         }
     }
 
-    void skipWrongChar() {
+    @FXML
+    void onEncryptButtonClick(ActionEvent event) {
+        int lengthOfFileName = fileObject.getName().length();
+        String[] wordsArr = fileObject.getName().split("\\.");
+        String path = fileObject.getPath().substring(0, fileObject.getPath().length() - lengthOfFileName) + wordsArr[0] + "chyp." + wordsArr[1];
+        System.out.println(path);
+        getCorrectInitState();
+        if (isCiphering){
+            readFromFile(fileObject.getPath());
+        } else readFromFile(path);
+
+        encrypt();
+        outputCiphertext();
+    }
+
+    void getCorrectInitState() {
         char[] charArr = initialState.toCharArray();
         for (int i = 0; i < charArr.length; i++) {
             if (charArr[i] != '0' && charArr[i] != '1')
@@ -131,12 +144,12 @@ public class HelloController {
         long state = Long.parseLong(initialState, 2);
         encryptByteArray = new byte[byteArray.length];
         StringBuilder key = new StringBuilder();
-        Register reg = new Register(state);
+        LSFR reg = new LSFR(state);
         for (int i = 0; i < byteArray.length; i++) {
             double stateBites = Math.pow(2, n) / 8;
             if (byteArray.length > stateBites) {
                 if (i > stateBites - 1 && i % stateBites == 0)
-                    reg = new Register(state);
+                    reg = new LSFR(state);
             }
             byte keyByte = (byte) reg.shift();
             String str = String.format("%8s", Integer.toBinaryString(keyByte & 0xFF)).replace(' ', '0');
@@ -164,27 +177,15 @@ public class HelloController {
             } else {
                 int lengthOfFileName = fileObject.getName().length();
                 String[] wordsArr = fileObject.getName().split("\\.");
-                path = fileObject.getPath().substring(0, fileObject.getPath().length() - lengthOfFileName) + wordsArr[0] + "(1)." + wordsArr[1];
+                path = fileObject.getPath().substring(0, fileObject.getPath().length() - lengthOfFileName) + wordsArr[0] + "chyp." + wordsArr[1];
             }
             String[] words = path.split("\\.");
-            FileOutputStream fw = new FileOutputStream((isCiphering ? words[0] : words[0].substring(0, words[0].length() - 3)) + "(" + (isCiphering ? "1" : "2") + ")." + words[1]);
+            FileOutputStream fw = new FileOutputStream((isCiphering ? words[0] : words[0].substring(0, words[0].length() - 3))  + (isCiphering ? "chyp" : "decr") + "." + words[1]);
             fw.write(encryptByteArray);
             fw.close();
             isCiphering = !isCiphering;
         } catch (IOException e) {
             System.out.println("Output error!");
         }
-    }
-
-    @FXML
-    void onEncryptClick(ActionEvent event) {
-        int lengthOfFileName = fileObject.getName().length();
-        String[] wordsArr = fileObject.getName().split("\\.");
-        String path = fileObject.getPath().substring(0, fileObject.getPath().length() - lengthOfFileName) + wordsArr[0] + "(1)." + wordsArr[1];
-        System.out.println(path);
-        skipWrongChar();
-        readFile(isCiphering ? fileObject.getPath() : path);
-        encrypt();
-        outputCiphertext();
     }
 }

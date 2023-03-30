@@ -9,12 +9,12 @@
 
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="703.0" prefWidth="1140.0" style="-fx-background-color: #62dab2;" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.demo.HelloController">
     <children>
-        <Button fx:id="readButton" layoutX="-1.0" layoutY="-2.0" mnemonicParsing="false" onAction="#onReadButtonClick" prefHeight="33.0" prefWidth="58.0" text="File">
+        <Button fx:id="readFromFileButton" layoutX="-1.0" layoutY="-2.0" mnemonicParsing="false" onAction="#onReadFromFileButtonClick" prefHeight="33.0" prefWidth="58.0" text="File">
             <font>
                 <Font size="15.0" />
             </font>
         </Button>
-        <Button fx:id="encryptionButton" disable="true" layoutX="466.0" layoutY="637.0" mnemonicParsing="false" onAction="#onEncryptClick" prefHeight="45.0" prefWidth="194.0" text="Encrypt/Decipher" textFill="#952dc4">
+        <Button fx:id="encryptionButton" disable="true" layoutX="466.0" layoutY="637.0" mnemonicParsing="false" onAction="#onEncryptButtonClick" prefHeight="45.0" prefWidth="194.0" text="Encrypt/Decipher" textFill="#952dc4">
             <font>
                 <Font name="System Bold" size="20.0" />
             </font>
